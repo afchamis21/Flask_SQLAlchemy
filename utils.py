@@ -1,4 +1,4 @@
-from models import People
+from models import People, Users
 
 
 def insert_person():
@@ -25,5 +25,19 @@ def delete_person():
     person.delete()
 
 
+def insert_user(login, password):
+    user = Users(login=login, password=password)
+    user.save()
+
+
+def lookup_users():
+    users = Users.query.all()
+    print(users)
+
+
 if __name__ == '__main__':
-    insert_person()
+    insert_user('andre', '12345')
+    insert_user('chamis', '12345')
+    insert_user('malu', '12345')
+
+    lookup_users()

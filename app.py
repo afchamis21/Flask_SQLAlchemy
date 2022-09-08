@@ -1,15 +1,38 @@
 from flask import Flask, request
 from flask_restful import Resource, Api
+from flask_httpauth import HTTPBasicAuth
 
-from models import People, Activities
+from models import People, Activities, Users
 
+auth = HTTPBasicAuth()
 app = Flask(__name__)
 api = Api(app)
 
 
+# USERS = {
+#     'andre': '321',
+#     'chamis': '456'
+# }
+#
+#
+# @auth.verify_password
+# def verification(login, password):
+#     if not (login, password):
+#         return False
+#
+#     return USERS.get(login) == password
+
+@auth.verify_password
+def verification(login, password):
+    if not (login, password):
+        return False
+
+    return Users.query.filter_by(login=login, password=password).first()
+
+
 class Person(Resource):
-    @staticmethod
-    def get(name):
+    @auth.login_required
+    def get(self, name):
         person = People.query.filter_by(name=name).first()
         try:
             response = {
@@ -26,8 +49,8 @@ class Person(Resource):
 
         return response
 
-    @staticmethod
-    def put(name):
+    @auth.login_required
+    def put(self, name):
         person = People.query.filter_by(name=name).first()
 
         try:
@@ -51,16 +74,16 @@ class Person(Resource):
             }
         return response
 
-    @staticmethod
-    def delete(name):
+    @auth.login_required
+    def delete(self, name):
         person = People.query.filter_by(name=name).first()
         person.delete()
         return {'status': 'success', 'message': 'person deleted successfully'}
 
 
 class ListPeople(Resource):
-    @staticmethod
-    def get():
+    @auth.login_required
+    def get(self):
         people = People.query.all()
         response = [{
             'name': person.name,
@@ -70,8 +93,8 @@ class ListPeople(Resource):
 
         return response
 
-    @staticmethod
-    def post():
+    @auth.login_required
+    def post(self):
         data = request.json
         person = People(name=data['name'], age=data['age'])
         person.save()
@@ -84,8 +107,8 @@ class ListPeople(Resource):
 
 
 class ListActivities(Resource):
-    @staticmethod
-    def get():
+    @auth.login_required
+    def get(self):
         activities = Activities.query.all()
         response = [
             {
@@ -96,8 +119,8 @@ class ListActivities(Resource):
         ]
         return response
 
-    @staticmethod
-    def post():
+    @auth.login_required
+    def post(self):
         data = request.json
         person = People.query.filter_by(name=data['person']).first()
         activity = Activities(name=data['name'], person=person)
